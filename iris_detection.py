@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import os
+import time
 
 from data_collector import DataCollector
 from image import Image
@@ -56,8 +57,13 @@ class IrisDetection(object):
         data_collector = DataCollector(self.dataset)
 
         keepLoop = True
+        current_t = time.clock()
+        previous_t = current_t
         while keepLoop:
             pressed_key = cv2.waitKey(1)
+            current_t = time.clock()
+            print('\nclock : ', current_t - previous_t)
+            previous_t = current_t
 
             img = self.getCameraImage()
             face, left_eye, right_eye = img.detectEyes(self.bufferFace, self.bufferLeftEye, self.bufferRightEye)
@@ -65,10 +71,9 @@ class IrisDetection(object):
                 face.draw(img)
             if left_eye:
                 left_eye.draw(face)
-                left_eye.detectIris()
+                left_eye.iris.normalizeIris()
             if right_eye:
                 right_eye.draw(face)
-                right_eye.detectIris()
 
             # Controls
             if pressed_key & 0xFF == ord('q'):
