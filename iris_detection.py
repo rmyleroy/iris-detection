@@ -65,9 +65,10 @@ class IrisDetection(object):
                 face.draw(img)
             if left_eye:
                 left_eye.draw(face)
-                left_eye.detectPupil()
+                left_eye.detectIris()
             if right_eye:
                 right_eye.draw(face)
+                right_eye.detectIris()
 
             # Controls
             if pressed_key & 0xFF == ord('q'):
