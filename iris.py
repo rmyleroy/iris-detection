@@ -127,28 +127,24 @@ class Iris(object):
         rectangle_w = 180
         rectangle_h = 40
         begin_t = time.time()
-        eye_copy = np.copy(self.eye.frame)
         a = self.iris_x - self.pupil_x
         if self.iris_r < a:
             return []
         
-        res = np.zeros((rectangle_h, rectangle_w, 3))
-        i_coef = 2. * math.pi / rectangle_w
-        for i in range(rectangle_w):
-            theta = i * i_coef
-            ct = math.cos(theta)
-            st = math.sin(theta)
-            r_l = ct * a + math.sqrt(self.iris_r ** 2 - a ** 2 * st ** 2)
-            j_fixx = self.pupil_x + self.pupil_r * ct
-            j_fixy = self.pupil_y + self.pupil_r * st
-            j_coefx = (r_l - self.pupil_r) * ct / rectangle_h
-            j_coefy = (r_l - self.pupil_r) * st / rectangle_h
-            for j in range(rectangle_h):
-                posx = int(j_fixx + j * j_coefx)
-                posy = int(j_fixy + j * j_coefy)
-                if(0 <= posx < self.eye.w and 0 <= posy < self.eye.h):
-                    res[j,i] = self.eye.frame[posx, posy, :]
-                    cv2.circle(eye_copy, (posx, posy), 0, (0, 128, 255), 1)
+        index_x = np.ones((rectangle_h, rectangle_w)) * self.pupil_x
+        index_y = np.ones((rectangle_h, rectangle_w)) * self.pupil_y
+        
+        theta = np.arange(rectangle_w).reshape((1, rectangle_w)) * 2 * np.pi / rectangle_w
+        ct = np.cos(theta)
+        st = np.sin(theta)
+        index_x += np.ones((rectangle_h, 1)) * ct * self.pupil_r
+        index_y += np.ones((rectangle_h, 1)) * st * self.pupil_r
+
+        r_l = ct * a + np.sqrt(self.iris_r ** 2 - a ** 2 * np.power(st, 2))
+        index_x += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * ct) / rectangle_h
+        index_y += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * st) / rectangle_h
+
+        res = self.eye.frame[index_x.astype('int'), index_y.astype('int'), :]
+
         print(time.time() - begin_t, ' normalization')
-        cv2.imshow('selected points', eye_copy)
         cv2.imshow('normalized iris', res.astype('uint8'))
