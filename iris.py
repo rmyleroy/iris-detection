@@ -143,8 +143,14 @@ class Iris(object):
         r_l = ct * a + np.sqrt(self.iris_r ** 2 - a ** 2 * np.power(st, 2))
         index_x += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * ct) / rectangle_h
         index_y += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * st) / rectangle_h
+        
+        index_x = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)), 
+                                      index_x.astype(int), 
+                                      np.ones((rectangle_h, rectangle_w)) * (self.eye.h - 1)]), axis=0)
+        index_y = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)), 
+                                      index_y.astype(int), 
+                                      np.ones((rectangle_h, rectangle_w)) * (self.eye.w - 1)]), axis=0)
 
         res = self.eye.frame[index_x.astype('int'), index_y.astype('int'), :]
 
-        print(time.time() - begin_t, ' normalization')
-        cv2.imshow('normalized iris', res.astype('uint8'))
+        cv2.imshow('normalized iris' + self.eye.type.value, res.astype('uint8'))

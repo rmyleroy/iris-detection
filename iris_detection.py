@@ -74,6 +74,7 @@ class IrisDetection(object):
                 left_eye.iris.normalizeIris()
             if right_eye:
                 right_eye.draw(face)
+                right_eye.iris.normalizeIris()
 
             # Controls
             if pressed_key & 0xFF == ord('q'):
