@@ -56,6 +56,11 @@ class IrisDetection(object):
         self.startCapture()
         data_collector = DataCollector(self.dataset)
 
+        modeFullFace = 0
+        modeOneEye = 1
+        modePictures = 2
+
+        mode = modeOneEye
         keepLoop = True
         current_t = time.clock()
         previous_t = current_t
@@ -66,15 +71,49 @@ class IrisDetection(object):
             previous_t = current_t
 
             img = self.getCameraImage()
-            face, left_eye, right_eye = img.detectEyes(self.bufferFace, self.bufferLeftEye, self.bufferRightEye)
-            if face:
-                face.draw(img)
-            if left_eye:
-                left_eye.draw(face)
-                left_eye.iris.normalizeIris()
-            if right_eye:
-                right_eye.draw(face)
-                right_eye.iris.normalizeIris()
+
+            if(mode == modeOneEye):
+                ex = 300
+                ey = 50
+                eh = 300
+                ew = 300
+                face = Face(0, 0, 640, 480, img.frame, img.canvas)
+                eye = Eye(ex, ey, ew, eh, face.frame, face.canvas)
+                eye.draw(face)
+                eye.iris.normalizeIris()
+
+            elif(mode == modeFullFace):
+                face, left_eye, right_eye = img.detectEyes(self.bufferFace, self.bufferLeftEye, self.bufferRightEye)
+                if face:
+                    face.draw(img)
+                if left_eye:
+                    left_eye.draw(face)
+                    left_eye.iris.normalizeIris()
+                if right_eye:
+                    right_eye.draw(face)
+                    right_eye.iris.normalizeIris()
+            else:
+                path = "./IR_Database/MMU Iris Database/"
+                for dir in os.listdir(path):
+                    subpath = path + dir + '/'
+                    if(os.path.isdir(subpath)):
+                        print(dir)
+                        for subdir in os.listdir(subpath):
+                            subsubpath = subpath + subdir + '/'
+                            if(os.path.isdir(subsubpath)):
+                                print('\t', subdir)
+                                for fname in os.listdir(subsubpath):
+                                    fpath = subsubpath + fname
+                                    if(os.path.isfile(fpath) and os.path.splitext(fname)[1] == '.bmp'):
+                                        print('\t\t', fname)
+                                        img = Image(cv2.imread(fpath))
+                                        face = Face(0, 0, img.canvas.shape[1], img.canvas.shape[0], img.frame, img.canvas)
+                                        eye = Eye(10, 10, face.w - 20, face.h - 20, face.frame, face.canvas)
+                                        eye.draw(face)
+                                        eye.iris.normalizeIris()
+                                        img.show()
+                                        pressed_key = cv2.waitKey(1000)
+                exit()
 
             # Controls
             if pressed_key & 0xFF == ord('q'):
