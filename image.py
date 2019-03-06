@@ -49,7 +49,7 @@ class Image(object):
             [Face, ...]: List of faces identified in the image
         """
         faces = face_cascade.detectMultiScale(self.gray, 1.3, 5)
-        self.faces = [Face(x, y, w, h, self.frame, self.canvas) for (x, y, w, h) in faces]
+        self.faces = [Face(self.frame, self.canvas, x, y, w, h) for (x, y, w, h) in faces]
 
         # Best face
         n_faces = len(self.faces)
@@ -80,7 +80,7 @@ class Image(object):
             ym = int(np.mean([face.y for face in lastFaces]))
             wm = int(np.mean([face.w for face in lastFaces]))
             hm = int(np.mean([face.h for face in lastFaces]))
-            return Face(xm, ym, wm, hm, self.frame, self.canvas)
+            return Face(self.frame, self.canvas, xm, ym, wm, hm)
         return self.best_face
 
     def detectEyes(self, bufferFace=None, bufferLeftEye=None, bufferRightEye=None):

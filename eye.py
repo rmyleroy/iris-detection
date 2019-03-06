@@ -43,7 +43,12 @@ class Eye(object):
                 EyeType.RIGHT: (0, 0, 255),
              }
 
-    def __init__(self, x, y, w, h, frame, canvas, type_=EyeType.UNDEFINED):
+    def __init__(self, frame, canvas=None, x=0, y=0, w=None, h=None, type_=EyeType.UNDEFINED, padding=0):
+        x += padding
+        y += padding
+        w = (w if w else frame.shape[1]) - padding * 2
+        h = (h if h else frame.shape[0]) - padding * 2
+
         self.x = x
         self.y = y
         self.w = w
@@ -53,9 +58,10 @@ class Eye(object):
 
         self.type = type_
 
-        self.frame = np.copy(frame[y:y+h,x:x+w])
-        self.gray = cv2.cvtColor(frame[y:y+h,x:x+w], cv2.COLOR_BGR2GRAY)
-        self.canvas = canvas[y:y+h,x:x+w]
+        self.frame = np.copy(frame[y:y+h, x:x+w])
+        self.gray = cv2.cvtColor(frame[y:y+h, x:x+w], cv2.COLOR_BGR2GRAY)
+        canvas = canvas if canvas is not None else np.copy(frame)
+        self.canvas = canvas[y:y+h, x:x+w]
 
         self.moments = None
         self.momentVectors = None

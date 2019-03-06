@@ -36,7 +36,10 @@ class Face(object):
         canvas
 
     """
-    def __init__(self, x, y, w, h, frame, canvas):
+    def __init__(self, frame, canvas=None, x=0, y=0, w=None, h=None):
+        w = w if w else frame.shape[1]
+        h = h if h else frame.shape[0]
+
         self.x = x
         self.y = y
         self.w = w
@@ -46,6 +49,7 @@ class Face(object):
 
         self.frame = np.copy(frame[y:y+h,x:x+w])
         self.gray = cv2.cvtColor(frame[y:y+h,x:x+w], cv2.COLOR_BGR2GRAY)
+        canvas = canvas if canvas is not None else np.copy(frame)
         self.canvas = canvas[y:y+h,x:x+w]
 
         self.eyes = []
@@ -82,7 +86,7 @@ class Face(object):
         """Uses classifiers to detect eyes in the face
         """
         eyes = eye_cascade.detectMultiScale(self.gray, 1.3, 5)
-        self.eyes = [Eye(x, y, w, h, self.frame, self.canvas) for (x, y, w, h) in eyes]
+        self.eyes = [Eye(self.frame, self.canvas, x, y, w, h) for (x, y, w, h) in eyes]
 
     def selectEyes(self):
         """
@@ -138,5 +142,5 @@ class Face(object):
                 wm = int(np.mean([eye.w for eye in lasts]))
                 hm = int(np.mean([eye.h for eye in lasts]))
                 if xm + wm < self.w and ym + hm < self.h:
-                    eyes[index] = Eye(xm, ym, wm, hm, self.frame, self.canvas, type_)
+                    eyes[index] = Eye(self.frame, self.canvas, type_, xm, ym, wm, hm)
         return eyes

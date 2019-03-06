@@ -22,6 +22,7 @@ from buffer import Buffer
 
 matplotlib.use('TkAgg')
 
+
 class IrisDetection(object):
     """Main class, retriving video frames from the webcam, acquiring data and segmenting the iris of eyes
     """
@@ -38,10 +39,15 @@ class IrisDetection(object):
         self.bufferLeftEye = Buffer(self.ROLLING_WINDOW_LENGTH)
         self.bufferRightEye = Buffer(self.ROLLING_WINDOW_LENGTH)
 
+        self.w = 640
+        self.h = 480
+
     def startCapture(self):
         """Start the webcam recording
         """
         self.cap = cv2.VideoCapture(0)
+        self.cap.set(3, self.w)
+        self.cap.set(4, self.h)
 
     def stopCapture(self):
         """Stop the camera recording
@@ -77,8 +83,8 @@ class IrisDetection(object):
                 ey = 50
                 eh = 300
                 ew = 300
-                face = Face(0, 0, 640, 480, img.frame, img.canvas)
-                eye = Eye(ex, ey, ew, eh, face.frame, face.canvas)
+                face = Face(img.frame, img.canvas, 0, 0, 640, 480)
+                eye = Eye(face.frame, face.canvas, ex, ey, ew, eh)
                 eye.draw(face)
                 eye.iris.normalizeIris()
 
@@ -107,8 +113,8 @@ class IrisDetection(object):
                                     if(os.path.isfile(fpath) and os.path.splitext(fname)[1] == '.bmp'):
                                         print('\t\t', fname)
                                         img = Image(cv2.imread(fpath))
-                                        face = Face(0, 0, img.canvas.shape[1], img.canvas.shape[0], img.frame, img.canvas)
-                                        eye = Eye(10, 10, face.w - 20, face.h - 20, face.frame, face.canvas)
+                                        face = Face(img.frame, img.canvas)
+                                        eye = Eye(face.frame, face.canvas, padding=10)
                                         eye.draw(face)
                                         eye.iris.normalizeIris()
                                         img.show()
@@ -181,7 +187,7 @@ class IrisDetection(object):
         """
         # Capture frame-by-frame
         ret, frame = self.cap.read()
-        frame = cv2.resize(frame, (640,480))
+        frame = cv2.resize(frame, (self.w, self.h))
         frame = cv2.flip(frame, 1)
 
         return Image(frame)
