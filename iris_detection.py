@@ -20,6 +20,7 @@ from eye import EyeType
 from data import Dataset
 from classifier import Classifier
 from buffer import Buffer
+from imagedb import ImageDB
 
 matplotlib.use('TkAgg')
 
@@ -67,15 +68,17 @@ class IrisDetection(object):
         modeOneEye = 1
         modePictures = 2
         modeTwoEyes = 3
+        modeImgDB = 4
+        modeDemo = 5
 
-        mode = modeTwoEyes
+        mode = modeDemo
         keepLoop = True
         current_t = time.clock()
         previous_t = current_t
         while keepLoop:
             pressed_key = cv2.waitKey(1)
             current_t = time.clock()
-            print('\nclock : ', current_t - previous_t)
+            #print('\nclock : ', current_t - previous_t)
             previous_t = current_t
 
             img = self.getCameraImage()
@@ -85,16 +88,16 @@ class IrisDetection(object):
                 ey = 50
                 eh = 200
                 ew = 200
-                face = Face(0, 0, 640, 480, img.frame, img.canvas)
-                eye = Eye(ex, ey, ew, eh, face.frame, face.canvas)
+                face = Face(img.frame, img.canvas, 0, 0, 640, 480)
+                eye = Eye(face.frame, face.canvas, ex, ey, ew, eh)
                 eye.draw(face)
                 eye.iris.normalizeIris()
             elif(mode == modeTwoEyes):
-                face = Face(0, 0, 640, 480, img.frame, img.canvas)
-                left_eye = Eye(50, 50, 200, 200, face.frame, face.canvas, EyeType.LEFT)
+                face = Face(img.frame, img.canvas, 0, 0, 640, 480)
+                left_eye = Eye(face.frame, face.canvas, 50, 50, 200, 200, EyeType.LEFT)
                 left_eye.draw(face)
                 left_eye.iris.normalizeIris()
-                right_eye = Eye(400, 50, 200, 200, face.frame, face.canvas, EyeType.RIGHT)
+                right_eye = Eye(face.frame, face.canvas, 400, 50, 200, 200, EyeType.RIGHT)
                 right_eye.draw(face)
                 right_eye.iris.normalizeIris()
             elif(mode == modeFullFace):
@@ -107,6 +110,28 @@ class IrisDetection(object):
                 if right_eye:
                     right_eye.draw(face)
                     right_eye.iris.normalizeIris()
+            elif(mode == modeImgDB):
+                img_db = ImageDB("./IR_Database/MMU Iris Database/")
+                print(img_db.estimateUser(img_db.bits[0]))
+                exit()
+            elif(mode == modeDemo):
+                path = "./TB_Database/"
+                face = Face(img.frame, img.canvas, 0, 0, 640, 480)
+                left_eye = Eye(face.frame, face.canvas, 50, 50, 200, 200, EyeType.LEFT)
+                left_eye.draw(face)
+                left_eye.iris.normalizeIris()
+                right_eye = Eye(face.frame, face.canvas, 400, 50, 200, 200, EyeType.RIGHT)
+                right_eye.draw(face)
+                right_eye.iris.normalizeIris()
+                if(ord('0') <= pressed_key & 0xFF <= ord('9')):
+                    print('0-9')
+                    id_person = chr(pressed_key & 0xFF)
+                    while((pressed_key & 0xFF) not in [ord('a'), ord('p')]):
+                        pressed_key = cv2.waitKey(50)
+                    print(pressed_key & 0xFF)
+                    if(pressed_key & 0xFF == ord('a')):
+                        cv2.imwrite(path + id_person + '/left/' + str(int(time.time() * 1000)) + '.bmp', left_eye.frame)
+                        cv2.imwrite(path + id_person + '/right/' + str(int(time.time() * 1000)) + '.bmp', right_eye.frame)
             else:
                 path = "./IR_Database/MMU Iris Database/"
                 for dir in os.listdir(path):

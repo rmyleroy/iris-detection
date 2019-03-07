@@ -106,3 +106,4 @@ venv.bak/
 /iris-detection.sln
 /.vs/iris-detection/v14/.suo
 /IR_Database
+/TB_Database
