@@ -40,11 +40,17 @@ class Iris(object):
         self.detectIris()
         self.detectEyelid()
 
+    def getIrisRadius(self):
+        return self.iris_r;
+
     def getIrisCenter(self):
         return (self.iris_x, self.iris_y)
 
     def getIrisCenterInFace(self):
         return (self.iris_x + self.eye.getLeft(), self.iris_y + self.eye.getTop())
+
+    def getPupilRadius(self):
+        return self.pupil_r
 
     def getPupilCenter(self):
         return (self.pupil_x, self.pupil_y)
@@ -52,9 +58,19 @@ class Iris(object):
     def getPupilCenterInFace(self):
         return (self.pupil_x + self.eye.getLeft(), self.pupil_y + self.eye.getTop())
 
+    def getEyelidRadius(self):
+        return self.up_eyelid_r
+
+    def getEyelidCenter(self):
+        return (self.up_eyelid_x, self.up_eyelid_y)
+
+    def getEyelidCenterInFace(self):
+        return (self.up_eyelid_x + self.eye.getLeft(), self.up_eyelid_y + self.eye.getTop())
+
     def draw(self, face):
-        cv2.circle(face.canvas, self.getPupilCenterInFace(), self.pupil_r, self.eye.COLORS[self.eye.type], 1)
-        cv2.circle(face.canvas, self.getIrisCenterInFace(), self.iris_r, self.eye.COLORS[self.eye.type], 1)
+        cv2.circle(face.canvas, self.getPupilCenterInFace(), self.getPupilRadius(), self.eye.COLORS[self.eye.type], 1)
+        cv2.circle(face.canvas, self.getIrisCenterInFace(), self.getIrisRadius(), self.eye.COLORS[self.eye.type], 1)
+        cv2.circle(face.canvas, self.getEyelidCenterInFace(), self.getEyelidRadius(), self.eye.COLORS[self.eye.type], 1)
 
     def expandLeftRight(self, binary_frame, xl, xr, yu, yd):
         while(0 <= xl and np.sum(binary_frame[yu:yd,xl]) > 0):
@@ -177,7 +193,7 @@ class Iris(object):
             self.up_eyelid_x = int((right_x + left_x) / 2 + k * alpha)
             self.up_eyelid_y = int((right_y + left_y) / 2 + k * beta)
 
-        cv2.circle(self.eye.canvas, (self.up_eyelid_x, self.up_eyelid_y), self.up_eyelid_r, self.eye.COLORS[self.eye.type], 1)
+        #cv2.circle(self.eye.canvas, (self.up_eyelid_x, self.up_eyelid_y), self.up_eyelid_r, self.eye.COLORS[self.eye.type], 1)
 
         pass
 

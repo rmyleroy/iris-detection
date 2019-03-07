@@ -16,6 +16,7 @@ from data_collector import DataCollector
 from image import Image
 from face import Face
 from eye import Eye
+from eye import EyeType
 from data import Dataset
 from classifier import Classifier
 from buffer import Buffer
@@ -59,8 +60,9 @@ class IrisDetection(object):
         modeFullFace = 0
         modeOneEye = 1
         modePictures = 2
+        modeTwoEyes = 3
 
-        mode = modeOneEye
+        mode = modeTwoEyes
         keepLoop = True
         current_t = time.clock()
         previous_t = current_t
@@ -75,13 +77,20 @@ class IrisDetection(object):
             if(mode == modeOneEye):
                 ex = 300
                 ey = 50
-                eh = 300
-                ew = 300
+                eh = 200
+                ew = 200
                 face = Face(0, 0, 640, 480, img.frame, img.canvas)
                 eye = Eye(ex, ey, ew, eh, face.frame, face.canvas)
                 eye.draw(face)
                 eye.iris.normalizeIris()
-
+            elif(mode == modeTwoEyes):
+                face = Face(0, 0, 640, 480, img.frame, img.canvas)
+                left_eye = Eye(50, 50, 200, 200, face.frame, face.canvas, EyeType.LEFT)
+                left_eye.draw(face)
+                left_eye.iris.normalizeIris()
+                right_eye = Eye(400, 50, 200, 200, face.frame, face.canvas, EyeType.RIGHT)
+                right_eye.draw(face)
+                right_eye.iris.normalizeIris()
             elif(mode == modeFullFace):
                 face, left_eye, right_eye = img.detectEyes(self.bufferFace, self.bufferLeftEye, self.bufferRightEye)
                 if face:
