@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 class Iris(object):
     """description of class
-    
+
     Args:
-        
+
     Attributes:
         eye: Eye object, the parent of this
     """
@@ -113,7 +113,7 @@ class Iris(object):
         pupil_xl, pupil_xr = self.expandLeftRight(binary_frame, pupil_xl, pupil_xr, pupil_yu, pupil_yd)
         pupil_yu, pupil_yd = self.expandUpDown(binary_frame, pupil_xl, pupil_xr, pupil_yu, pupil_yd)
         pupil_xl, pupil_xr = self.expandLeftRight(binary_frame, pupil_xl, pupil_xr, pupil_yu, pupil_yd)
-        
+
         self.pupil_x = (pupil_xl + pupil_xr) // 2
         self.pupil_y = (pupil_yd + pupil_yu) // 2
         self.pupil_r = (pupil_xr - pupil_xl + pupil_yd - pupil_yu) // 4
@@ -173,7 +173,7 @@ class Iris(object):
 
         #cv2.rectangle(self.eye.canvas, (left_sector_xl, both_sector_yu), (left_sector_xr, both_sector_yd), self.eye.COLORS[self.eye.type], 1)
         #cv2.rectangle(self.eye.canvas, (right_sector_xl, both_sector_yu), (right_sector_xr, both_sector_yd), self.eye.COLORS[self.eye.type], 1)
-        
+
         if(0 <= left_sector_xl < left_sector_xr < self.eye.w and 0 <= right_sector_xl < right_sector_xr < self.eye.w and 0 <= both_sector_yu < both_sector_yd < self.eye.h):
             left_sobel = cv2.Sobel((self.eye.gray[both_sector_yu:both_sector_yd, left_sector_xl:left_sector_xr]).astype('uint8'), cv2.CV_8U, 1, 1)
             right_sobel = cv2.Sobel((self.eye.gray[both_sector_yu:both_sector_yd, right_sector_xl:right_sector_xr]).astype('uint8'), cv2.CV_8U, 1, 1)
@@ -195,10 +195,6 @@ class Iris(object):
 
         #cv2.circle(self.eye.canvas, (self.up_eyelid_x, self.up_eyelid_y), self.up_eyelid_r, self.eye.COLORS[self.eye.type], 1)
 
-        pass
-
-        
-
     def normalizeIris(self):
         rectangle_w = 256
         rectangle_h = 64
@@ -214,10 +210,10 @@ class Iris(object):
         a = self.iris_x - self.pupil_x
         if self.iris_r < a:
             return []
-        
+
         index_x = np.ones((rectangle_h, rectangle_w)) * self.pupil_x
         index_y = np.ones((rectangle_h, rectangle_w)) * self.pupil_y
-        
+
         theta = np.arange(rectangle_w).reshape((1, rectangle_w)) * 2 * np.pi / rectangle_w
         ct = np.cos(theta)
         st = np.sin(theta)
@@ -227,19 +223,25 @@ class Iris(object):
         r_l = ct * a + np.sqrt(self.iris_r ** 2 - a ** 2 * np.power(st, 2))
         index_x += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * ct) / rectangle_h
         index_y += np.arange(rectangle_h).reshape((rectangle_h, 1)) * ((r_l - self.pupil_r) * st) / rectangle_h
-        
-        index_x = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)), 
-                                      index_x, 
+
+        index_x = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)),
+                                      index_x,
                                       np.ones((rectangle_h, rectangle_w)) * (self.eye.h - 1)]), axis=0)
-        index_y = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)), 
-                                      index_y, 
+        index_y = np.median(np.stack([np.zeros((rectangle_h, rectangle_w)),
+                                      index_y,
                                       np.ones((rectangle_h, rectangle_w)) * (self.eye.w - 1)]), axis=0)
 
-        res = self.eye.frame[index_y.astype(int), index_x.astype(int), :].astype('uint8')
+        mask = np.zeros_like(self.eye.frame)
+        cv2.circle(mask, (self.up_eyelid_x, self.up_eyelid_y), self.up_eyelid_r, (255, 255, 255), -1)
+        no_eyelid_frame = np.array(self.eye.frame) * mask
+
+        res = no_eyelid_frame[index_y.astype(int), index_x.astype(int), :].astype('uint8')
         res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
         #res = res / np.std(res)
         #res = cv2.normalize(res, res, 0, 255, cv2.NORM_MINMAX)
         res = cv2.equalizeHist(res.astype('uint8'))
+
+        self.normalized = res
 
         #truc = np.ones((rectangle_h, 1)) * np.cos(np.arange(rectangle_w) / 2) * 127 + 127
 
@@ -252,8 +254,10 @@ class Iris(object):
 
         self.bits_pattern = np.where(energy_h >= energy_v, 1, 0)
 
-        bits_pattern_img = np.ones((wavelet_block_size, 1)) * np.swapaxes(np.ones((wavelet_block_size, 1)) * self.bits_pattern.reshape((1, -1)), 0, 1).reshape((1, -1))
-        cv2.imshow('bits pattern ' + self.eye.type.value, (bits_pattern_img * 255).astype('uint8'))
+        # print(np.swapaxes(self.bits_pattern.reshape((1, -1)), 0, 1).reshape((1, -1)))
+        # self.bits_pattern_img = np.ones((wavelet_block_size, 1)) * np.swapaxes(np.ones((wavelet_block_size, 1)) * self.bits_pattern.reshape((1, -1)), 0, 1).reshape((1, -1))
+        self.bits_pattern_img = np.swapaxes(self.bits_pattern.reshape((1, -1)), 0, 1).reshape((1, -1))
+        #cv2.imshow('bits pattern ' + self.eye.type.value, (self.bits_pattern_img * 255).astype('uint8'))
 
         #cv2.imshow('LL ' + self.eye.type.value, LL.astype('uint8'))
         #cv2.imshow('LH ' + self.eye.type.value, LH.astype('uint8'))
@@ -269,12 +273,12 @@ class Iris(object):
         #normalized_fft_LH = (np.abs(fft_LH) / np.max(np.abs(fft_LH)) * 255)
         #normalized_fft_HL = (np.abs(fft_HL) / np.max(np.abs(fft_HL)) * 255)
         #normalized_fft_HH = (np.abs(fft_HH) / np.max(np.abs(fft_HH)) * 255)
-        
+
         #cv2.imshow('normalized fft LL ' + self.eye.type.value, normalized_fft_LL.astype('uint8'))
         #cv2.imshow('normalized fft LH ' + self.eye.type.value, normalized_fft_LH.astype('uint8'))
         #cv2.imshow('normalized fft HL ' + self.eye.type.value, normalized_fft_HL.astype('uint8'))
         #cv2.imshow('normalized fft HH ' + self.eye.type.value, normalized_fft_HH.astype('uint8'))
-        
+
 
         #fft_res = np.fft.fft2(res)
         #fft_res[0,0] = 0
@@ -288,10 +292,8 @@ class Iris(object):
         #fft_res = fftpack.fft2(truc, res.shape)
         #fft_res = cv2.normalize(fft_res.astype('uint8'), None, 0, 255, cv2.NORM_MINMAX)
 
-        cv2.imshow('normalized iris ' + self.eye.type.value, res.astype('uint8'))
+        #cv2.imshow('normalized iris ' + self.eye.type.value, res.astype('uint8'))
         #cv2.imshow('truc ' + self.eye.type.value, truc.astype('uint8'))
         #cv2.imshow('fft ' + self.eye.type.value, normalized_fft_res)
         #cv2.imshow('normalized iris back ' + self.eye.type.value, res_inv.astype('uint8'))
         #cv2.imshow('normalized iris diff ' + self.eye.type.value, res_diff.astype('uint8'))
-
-        
